@@ -1,0 +1,323 @@
+# Aspose.3D Wavefront OBJ Exporter
+# Copyright 2004-2024 Aspose Pty Ltd.
+# File created: 02/12/2024 20:42:58
+
+newmtl Material0_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+newmtl Material1_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material2_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.4
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material3_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.08857364
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material4_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material4-material_baseColor.jpg
+newmtl Material5_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material6_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0
+	Pm 0.14954318
+	d 1
+	Tr 0
+	map_Kd Material6-material_baseColor_scale0.jpg
+newmtl Material10_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material10-material_baseColor.jpg
+newmtl Material11_material
+	illum 2
+	Kd 0.5147434 0.5147434 0.5147434
+	Ke 0 0 0
+	Pr 0.13894609
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material12_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material12-material_baseColor.jpg
+newmtl Material13_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material13-material_baseColor.jpg
+newmtl Material14_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material14-material_baseColor.jpg
+newmtl Material16_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material16-material_baseColor.jpg
+newmtl Material17_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material17-material_baseColor.jpg
+newmtl Material19_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.19561508
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material20_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material20-material_baseColor.jpg
+newmtl Material21_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.11375986
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material23_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material23-material_baseColor.jpg
+newmtl Material24_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material24-material_baseColor.jpg
+newmtl Material38_material
+	illum 2
+	Kd 0.14954318 0.14954318 0.14954318
+	Ke 0 0 0
+	Pr 0.17042886
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material42_material
+	illum 2
+	Kd 0.11176386 0.11176386 0.11176386
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material45_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material45-material_baseColor.jpg
+newmtl Material47_material
+	illum 2
+	Kd 0.09287419 0.09287419 0.09287419
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material51_material
+	illum 2
+	Kd 0.073984526 0.073984526 0.073984526
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material52_material
+	illum 2
+	Kd 0.061391413 0.061391413 0.061391413
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material53_material
+	illum 2
+	Kd 1 0 0
+	Ke 0 0 0
+	Pr 0.4
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material55_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material55-material_baseColor.jpg
+newmtl Material59_material
+	illum 2
+	Kd 0.048798304 0.048798304 0.048798304
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+newmtl Material61_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.15783575
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material62_material
+	illum 2
+	Kd 0.14954318 0.14954318 0.14954318
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material63_material
+	illum 2
+	Kd 0.055094857 0.055094857 0.055094857
+	Ke 0 0 0
+	Pr 0.6
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material68_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.21450475
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material70_material
+	illum 2
+	Kd 1 0 0
+	Ke 0 0 0
+	Pr 0.15153919
+	Pm 0.80438495
+	d 1
+	Tr 0
+newmtl Material72_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.6
+	Pm 0
+	d 1
+	Tr 0
+	map_Kd Material72-material_baseColor.jpg
+newmtl Material73_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.54622614
+	Pm 0.1621363
+	d 1
+	Tr 0
+	map_Kd Material73-material_baseColor.jpg
+newmtl Material26_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.10746331
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material28_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.101166755
+	Pm 1
+	d 1
+	Tr 0
+newmtl Material29_material
+	illum 2
+	Kd 1 1 1
+	Ke 0 0 0
+	Pr 0.20820819
+	Pm 1
+	d 1
+	Tr 0

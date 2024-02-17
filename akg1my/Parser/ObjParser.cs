@@ -2,7 +2,7 @@
 using System.IO;
 using System.Numerics;
 
-namespace akg1my
+namespace akg1my.Parser
 {
     internal class ObjParser
     {
@@ -67,22 +67,24 @@ namespace akg1my
 
         private void AddFace(string[] data)
         {
-            var vs = new List<Vector4>();
-            var vns = new List<Vector3>();
-            var vts = new List<Vector3>();
+            List<int> vs = [];
+            List<int> vns = [];
+            List<int> vts = [];
 
-            for (int i = 1; i < data.Length && data[i] != string.Empty; i++)
+            var coords = data[1..].Where(d => d != string.Empty).ToArray();
+
+            for (int i = 0; i < coords.Length; i++)
             {
-                var elem = data[i].Split('/');
+                var elem = coords[i].Split('/');
 
                 int vId = int.Parse(elem[0]);
                 if (vId != -1)
                 {
-                    vs.Add(Vertices[vId - 1]);
+                    vs.Add(vId);
                 }
                 else
                 {
-                    vs.Add(Vertices[^1]);
+                    vs.Add(Vertices.Count);
                 }
 
                 int vtId;
@@ -93,43 +95,46 @@ namespace akg1my
                     if (elem[1] != string.Empty)
                     {
                         vtId = int.Parse(elem[1]);
+
                         if (vtId != -1)
                         {
-                            vts.Add(VertexTextures[vtId - 1]);
+                            vts.Add(vtId);
                         }
                         else
                         {
-                            vts.Add(VertexTextures[^1]);
+                            vts.Add(VertexTextures.Count);
                         }
                     }
                     else
                     {
                         vnId = int.Parse(elem[2]);
+
                         if (vnId != -1)
                         {
-                            vns.Add(VertexNormals[vnId - 1]);
+                            vns.Add(vnId);
                         }
                         else
                         {
-                            vns.Add(VertexNormals[^1]);
+                            vns.Add(VertexNormals.Count);
                         }
                     }
                 }
                 if (elem.Length > 2)
                 {
                     vnId = int.Parse(elem[2]);
+
                     if (vnId != -1)
                     {
-                        vns.Add(VertexNormals[vnId - 1]);
+                        vns.Add(vnId);
                     }
                     else
                     {
-                        vns.Add(VertexNormals[^1]);
+                        vns.Add(VertexNormals.Count);
                     }
                 }
-
-                Faces.Add(new(vs, vts, vns));
             }
+
+            Faces.Add(new(vs, vts, vns));
         }
     }
 }
