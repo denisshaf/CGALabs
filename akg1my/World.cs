@@ -1,8 +1,4 @@
-﻿using akg1my.Parser;
-using System.Collections.Concurrent;
-using System.Numerics;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media.Media3D;
+﻿using System.Numerics;
 
 namespace akg1my
 {

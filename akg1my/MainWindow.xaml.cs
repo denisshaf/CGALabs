@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Point = System.Windows.Point;
+using Color = System.Drawing.Color;
 
 namespace akg1my
 {
@@ -117,6 +118,7 @@ namespace akg1my
                         var verteces = _world.TransformObjectsVerteces(obj);
                         var faces = obj.Faces;
                         byte* pixels = (byte*)buffer.ToPointer();
+                        var edgeColor = Color.White;
 
                         foreach (var face in faces)
                         {
@@ -134,7 +136,7 @@ namespace akg1my
                                     (int)vi.Y > 0 && (int)vj.Y > 0 &&
                                     (int)vi.X < _windowWidth && (int)vj.X < _windowWidth &&
                                     (int)vi.Y < _windowHeight && (int)vj.Y < _windowHeight))
-                                Drawing.DrawLine((int)vi.X, (int)vi.Y, (int)vj.X, (int)vj.Y, pixels, stride);
+                                Drawing.DrawLine((int)vi.X, (int)vi.Y, (int)vj.X, (int)vj.Y, pixels, stride, edgeColor);
                             for (int i = 0; i < vertexIds.Count - 1; i++)
                             {
                                 vi = verteces[vertexIds[i] - 1];
@@ -145,7 +147,7 @@ namespace akg1my
                                     (int)vi.Y > 0 && (int)vj.Y > 0 &&
                                     (int)vi.X < _windowWidth && (int)vj.X < _windowWidth &&
                                     (int)vi.Y < _windowHeight && (int)vj.Y < _windowHeight))
-                                    Drawing.DrawLine((int)vi.X, (int)vi.Y, (int)vj.X, (int)vj.Y, pixels, stride);
+                                    Drawing.DrawLine((int)vi.X, (int)vi.Y, (int)vj.X, (int)vj.Y, pixels, stride, edgeColor);
 
                                 /*Console.WriteLine($"draw line from ({(int)vi.X}, {(int)vi.Y}) to ({(int)vj.X}, {(int)vj.Y})");*/
                             }
@@ -156,7 +158,7 @@ namespace akg1my
                 writableBitmap.Unlock();
                 Image.Source = writableBitmap;
                 _frameCount++;
-                await Task.Delay(1);
+                await Task.Delay(0);
 
                /* break;*/
             }
