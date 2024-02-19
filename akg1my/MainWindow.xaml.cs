@@ -13,6 +13,7 @@ using static System.Formats.Asn1.AsnWriter;
 using System.Reflection.PortableExecutable;
 using System.Windows.Media.Media3D;
 using System.Security.Authentication;
+using System.Diagnostics;
 
 namespace akg1my
 {
@@ -36,7 +37,7 @@ namespace akg1my
         {
             InitializeComponent();
 
-            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\Shrek\Shrek.obj");
+            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\CarImpala\Car.obj");
             var model = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
 
             model.RotationInWorldSpace = Vector3.Zero;
@@ -135,6 +136,7 @@ namespace akg1my
                         _drawer.Stride = stride;
 
                         // var colors = new List<Color>() { Color.Red, Color.Red, Color.Blue, Color.Blue, Color.Green, Color.Green, Color.Purple, Color.Purple, Color.Yellow, Color.Yellow, Color.LightBlue, Color.LightBlue }.GetEnumerator();
+                        // var colors = new List<Color>() { Color.Red, Color.Blue }.GetEnumerator();
 
                         foreach (var face in faces)
                         /*Parallel.ForEach(faces, face =>*/
@@ -147,13 +149,11 @@ namespace akg1my
                             bool coordsInWindow;
 
                             // colors.MoveNext();
-
                             if (_rasterizationOn)
                             {
                                 if (_backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
                                 {
-                                    IntPoint p1, p2, p3;
-                                    Vector3 z;
+                                    Vector3 p1, p2, p3;
                                     Color faceColor = Color.White;
                                     float light;
 
@@ -163,22 +163,27 @@ namespace akg1my
                                         faceColor = Color.FromArgb(1, (int)(faceColor.R * light), (int)(faceColor.G * light), (int)(faceColor.B * light));
                                     }
 
-                                    p1 = new IntPoint((int)viewportVerteces[vertexIds[0] - 1].X, (int)viewportVerteces[vertexIds[0] - 1].Y);
+                                    p1 = new Vector3(viewportVerteces[vertexIds[0] - 1].X, 
+                                        viewportVerteces[vertexIds[0] - 1].Y,
+                                        viewportVerteces[vertexIds[0] - 1].Z);
                                     for (int i = 1; i < vertexIds.Count - 1; i++)
                                     {
-                                        p2 = new IntPoint((int)viewportVerteces[vertexIds[i] - 1].X, (int)viewportVerteces[vertexIds[i] - 1].Y);
-                                        p3 = new IntPoint((int)viewportVerteces[vertexIds[i + 1] - 1].X, (int)viewportVerteces[vertexIds[i + 1] - 1].Y);
-                                        z = new Vector3(viewportVerteces[vertexIds[0] - 1].Z, viewportVerteces[vertexIds[i] - 1].Z, viewportVerteces[vertexIds[i + 1] - 1].Z);
+                                        p2 = new Vector3(viewportVerteces[vertexIds[i] - 1].X,
+                                            viewportVerteces[vertexIds[i] - 1].Y,
+                                            viewportVerteces[vertexIds[i] - 1].Z);
+                                        p3 = new Vector3(viewportVerteces[vertexIds[i + 1] - 1].X,
+                                            viewportVerteces[vertexIds[i + 1] - 1].Y,
+                                            viewportVerteces[vertexIds[i + 1] - 1].Z);
 
                                         // Console.Out.WriteLineAsync($"{p1}, {p2}, {p3}");
-                                        coordsInWindow = _drawer.PointInWindow(p1.X, p1.Y) &&
-                                            _drawer.PointInWindow(p2.X, p2.Y) &&
-                                            _drawer.PointInWindow(p3.X, p3.Y);
+                                        coordsInWindow = _drawer.PointInWindow((int)p1.X, (int)p1.Y) &&
+                                            _drawer.PointInWindow((int)p2.X, (int)p2.Y) &&
+                                            _drawer.PointInWindow((int)p3.X, (int)p3.Y);
 
                                         if (coordsInWindow &&
                                             p1 != p2 && p1 != p3 && p2 != p3)
                                         {
-                                            _drawer.RasterizeTriangle(p1, p2, p3, z, faceColor);
+                                            _drawer.RasterizeTriangle(p1, p2, p3, faceColor);
                                         }
                                     }
                                 }
@@ -218,6 +223,7 @@ namespace akg1my
                 Image.Source = writableBitmap;
                 _frameCount++;
 
+                
                 await Task.Delay(1);
 
                 /* break;*/
@@ -298,7 +304,7 @@ namespace akg1my
 
         private void MainWindow_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            _world.Zoom(-e.Delta / 1000.0f);
+            _world.Zoom(-e.Delta / 100.0f);
 
             e.Handled = true;
         }

@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using System.Security.Cryptography.Pkcs;
 
 namespace akg1my
 {
@@ -97,15 +96,15 @@ namespace akg1my
             return values;
         }
 
-        public unsafe void RasterizeTriangle(Point v0, Point v1, Point v2, Vector3 z, Color color)
+        public unsafe void RasterizeTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Color color)
         {
             if (v1.Y < v0.Y) (v1, v0) = (v0, v1);
             if (v2.Y < v0.Y) (v2, v0) = (v0, v2);
             if (v2.Y < v1.Y) (v2, v1) = (v1, v2);
 
-            int x0 = v0.X, x1 = v1.X, x2 = v2.X;
-            int y0 = v0.Y, y1 = v1.Y, y2 = v2.Y;
-            float z0 = z.X, z1 = z.Y, z2 = z.Z;
+            int x0 = (int)v0.X, x1 = (int)v1.X, x2 = (int)v2.X;
+            int y0 = (int)v0.Y, y1 = (int)v1.Y, y2 = (int)v2.Y;
+            float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
 
             /*if (y0 <= 0 || y2 >= Height || x0 <= 0 || x2 >= Width)
                 return;*/
@@ -125,8 +124,8 @@ namespace akg1my
 
             z01.RemoveAt(z01.Count - 1);
             var z012 = new List<float>(z01.Count + z12.Count);
-            z012.AddRange(x01);
-            z012.AddRange(x12);
+            z012.AddRange(z01);
+            z012.AddRange(z12);
 
             int middle = x012.Count / 2;
             List<float> xLeft, xRight, zLeft, zRight;

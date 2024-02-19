@@ -15,11 +15,11 @@ namespace akg1my
         public World(int windowWidth, int windowHeight)
         {
 
-            var eye = new Vector3(0, 0, -3);
+            var eye = new Vector3(0, 0, -500);
             var target = new Vector3(0, 0, 0);
             var up = new Vector3(0, 1, 0);
 
-            _camera = new Camera(eye, target, up, 0.1f, 10f, windowWidth, windowHeight, 70);
+            _camera = new Camera(eye, target, up, 0.1f, 10000f, windowWidth, windowHeight, 70);
             _camera.Projection = Camera.ProjectionType.Perspective;
 
             var lightPosition = new Vector3(2, 2, 2);
