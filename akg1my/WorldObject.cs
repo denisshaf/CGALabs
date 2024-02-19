@@ -14,6 +14,7 @@ namespace akg1my
         public Vector3 RotationInParentSpace { get; set; }
 
         public List<Vector4> Vertices { get { return _vertices.ToList(); } }
+        public List<Vector3> VertexNormals { get { return _vertexNormals.ToList(); } }
         public List<Face> Faces { get { return _faces.ToList(); } }
 
         private readonly List<Vector4> _vertices;

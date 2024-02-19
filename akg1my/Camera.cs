@@ -97,9 +97,9 @@ namespace akg1my
             {
                 _width = value;
 
-                /*_orthographicProjectionMatrix.M11 = 2 / _width;
+                _orthographicProjectionMatrix.M11 = 2 / _width;
 
-                _perspectiveProjectionMatrix.M11 = 1.0f / (AspectRatio * MathF.Tan(_fov / 2));*/
+                _perspectiveProjectionMatrix.M11 = 1.0f / (AspectRatio * float.Tan(_fov / 2));
 
                 _viewportMatrix.M11 = _width >> 1;
                 _viewportMatrix.M14 = _width >> 1;
@@ -115,9 +115,9 @@ namespace akg1my
             {
                 _height = value;
 
-                /*_orthographicProjectionMatrix.M22 = 2 / _height;
+                _orthographicProjectionMatrix.M22 = 2 / _height;
 
-                _perspectiveProjectionMatrix.M22 = 2 * _zNear / _height;*/
+                _perspectiveProjectionMatrix.M11 = 1.0f / (AspectRatio * float.Tan(_fov / 2));
 
                 _viewportMatrix.M22 = - _height >> 1;
                 _viewportMatrix.M24 = _height >> 1;
@@ -205,7 +205,6 @@ namespace akg1my
             float cosPolarAngle = float.Cos(_polarAngle);
             float sinAzimuthalAngle = float.Sin(_azimuthalAngle);
             float cosAzimuthalAngle = float.Cos(_azimuthalAngle);
-            Console.WriteLine($"{sinPolarAngle}, {cosPolarAngle}, {sinAzimuthalAngle}, {cosAzimuthalAngle}");
             _eye = new Vector3(_radialDistance * sinPolarAngle * cosAzimuthalAngle,
                                _radialDistance * cosPolarAngle,
                                _radialDistance * sinPolarAngle * sinAzimuthalAngle);
@@ -268,11 +267,11 @@ namespace akg1my
             else
             {
                 _radialDistance = _eye.Length();
-                _polarAngle = MathF.Acos(_eye.Z / _radialDistance);
+                _polarAngle = float.Acos(_eye.Z / _radialDistance);
 
                 if (!(_eye.X == 0 && _eye.Y == 0))
                 {
-                    _azimuthalAngle = Math.Sign(_eye.Y) * MathF.Acos(_eye.X / MathF.Sqrt(MathF.Pow(_eye.X, 2) + MathF.Pow(_eye.Y, 2)));
+                    _azimuthalAngle = float.Sign(_eye.Y) * float.Acos(_eye.X / float.Sqrt(float.Pow(_eye.X, 2) + float.Pow(_eye.Y, 2)));
                 }
                 else
                 {
