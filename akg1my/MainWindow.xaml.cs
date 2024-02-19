@@ -36,7 +36,7 @@ namespace akg1my
         {
             InitializeComponent();
 
-            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\cube.obj");
+            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\Shrek\Shrek.obj");
             var model = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
 
             model.RotationInWorldSpace = Vector3.Zero;
@@ -134,7 +134,7 @@ namespace akg1my
                         _drawer.Data = pixels;
                         _drawer.Stride = stride;
 
-                        var colors = new List<Color>() { Color.Red, Color.Red, Color.Blue, Color.Blue, Color.Green, Color.Green, Color.Purple, Color.Purple, Color.Yellow, Color.Yellow, Color.LightBlue, Color.LightBlue }.GetEnumerator();
+                        // var colors = new List<Color>() { Color.Red, Color.Red, Color.Blue, Color.Blue, Color.Green, Color.Green, Color.Purple, Color.Purple, Color.Yellow, Color.Yellow, Color.LightBlue, Color.LightBlue }.GetEnumerator();
 
                         foreach (var face in faces)
                         /*Parallel.ForEach(faces, face =>*/
@@ -146,7 +146,7 @@ namespace akg1my
 
                             bool coordsInWindow;
 
-                            colors.MoveNext();
+                            // colors.MoveNext();
 
                             if (_rasterizationOn)
                             {
@@ -178,7 +178,7 @@ namespace akg1my
                                         if (coordsInWindow &&
                                             p1 != p2 && p1 != p3 && p2 != p3)
                                         {
-                                            _drawer.RasterizeTriangle(p1, p2, p3, z, colors.Current);
+                                            _drawer.RasterizeTriangle(p1, p2, p3, z, faceColor);
                                         }
                                     }
                                 }
