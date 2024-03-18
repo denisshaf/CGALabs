@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 namespace akg1my
 {
@@ -12,6 +13,8 @@ namespace akg1my
     {
         public Vector3 PositionInParentSpace { get; set; }
         public Vector3 RotationInParentSpace { get; set; }
+        public Color Color { get; set; }
+        public bool IsAlwaysVisible { get; set; }
 
         public List<Vector4> Vertices { get { return _vertices.ToList(); } }
         public List<Vector3> VertexNormals { get { return _vertexNormals.ToList(); } }
@@ -31,9 +34,12 @@ namespace akg1my
 
             PositionInParentSpace = Vector3.Zero;
             RotationInParentSpace = Vector3.Zero;
+            Color = Color.White;
+            IsAlwaysVisible = false;
         }
 
         public Vector3 PositionInWorldSpace{ get; set; }
         public Vector3 RotationInWorldSpace { get; set; }
+        public Vector3 ScaleInWorldSpace { get; set; }
     }
 }

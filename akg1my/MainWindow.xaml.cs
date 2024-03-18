@@ -6,14 +6,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using DoublePoint = System.Windows.Point;
-using IntPoint = System.Drawing.Point;
 using Color = System.Drawing.Color;
-using static System.Formats.Asn1.AsnWriter;
-using System.Reflection.PortableExecutable;
-using System.Windows.Media.Media3D;
-using System.Security.Authentication;
-using System.Diagnostics;
+using DoublePoint = System.Windows.Point;
 
 namespace akg1my
 {
@@ -32,21 +26,45 @@ namespace akg1my
         private int _frameCount;
         private DoublePoint _lastMousePosition;
         private bool _rasterizationOn, _backFacesOn, _lightOn;
+        private int _superSamplingCoef = 2;
 
         public MainWindow()
         {
             InitializeComponent();
-
-            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\CarImpala\Car.obj");
+            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\knight\knight.obj");
             var model = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
+            parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\sphere\sphere.obj");
+            var sphere = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
+            parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\XAxis.obj");
+            var xAxis = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
+            parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\YAxis.obj");
+            var yAxis = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
+            parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\ZAxis.obj");
+            var zAxis = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
+
+            xAxis.Color = Color.Red;
+            yAxis.Color = Color.Green;
+            zAxis.Color = Color.Blue;
+            xAxis.IsAlwaysVisible = true;
+            yAxis.IsAlwaysVisible = true;
+            zAxis.IsAlwaysVisible = true;
 
             model.RotationInWorldSpace = Vector3.Zero;
             model.PositionInWorldSpace = new Vector3(0, 0, 0);
+            model.ScaleInWorldSpace = new Vector3(1, 1, 1);
+            model.Color = Color.White;
+
+            sphere.PositionInWorldSpace = new Vector3(0, 0, -6);
+            sphere.ScaleInWorldSpace = new Vector3(0.01f, 0.01f, 0.01f);
 
             InitializeWindowComponents();
 
             _world = new World(_windowWidth, _windowHeight);
             _world.AddWorldObject(model);
+            _world.AddWorldObject(xAxis);
+            _world.AddWorldObject(yAxis);
+            _world.AddWorldObject(zAxis);
+            _world.AddWorldObject(sphere);
             _drawer = new Drawer(_windowWidth, _windowHeight);
             _rasterizationOn = false;
             _backFacesOn = false;
@@ -114,11 +132,13 @@ namespace akg1my
 
             while (true)
             {
-                WriteableBitmap writableBitmap = new WriteableBitmap(_windowWidth, _windowHeight, 96, 96, PixelFormats.Bgr24, null);
+                int dpi = 96;
+                WriteableBitmap writableBitmap = new WriteableBitmap(_windowWidth, _windowHeight, dpi, dpi, PixelFormats.Bgr24, null);
+                writableBitmap.Lock();
+
                 Int32Rect rect = new Int32Rect(0, 0, _windowWidth, _windowHeight);
                 IntPtr buffer = writableBitmap.BackBuffer;
                 int stride = writableBitmap.BackBufferStride;
-                writableBitmap.Lock();
                 Array.Fill(_drawer.ZBuffer, float.MaxValue);
 
                 unsafe
@@ -130,7 +150,8 @@ namespace akg1my
                         var normals = obj.VertexNormals;
                         var faces = obj.Faces;
                         byte* pixels = (byte*)buffer.ToPointer();
-                        var edgeColor = Color.White;
+                        Console.Out.WriteLineAsync($"{buffer}");
+                        var edgeColor = obj.Color;
 
                         _drawer.Data = pixels;
                         _drawer.Stride = stride;
@@ -151,16 +172,21 @@ namespace akg1my
                             // colors.MoveNext();
                             if (_rasterizationOn)
                             {
-                                if (_backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
+                                if (obj.IsAlwaysVisible || _backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
                                 {
                                     Vector3 p1, p2, p3;
-                                    Color faceColor = Color.White;
-                                    float light;
+                                    Color faceColor = obj.Color;
+                                    Vector3 light;
 
-                                    if (_lightOn)
+                                    if (_lightOn && !(float.IsNaN(faceNormal.X) ||
+                                            float.IsNaN(faceNormal.Y) ||
+                                            float.IsNaN(faceNormal.Z)))
                                     {
                                         light = _world.CalculateLight(faceCenter, faceNormal);
-                                        faceColor = Color.FromArgb(1, (int)(faceColor.R * light), (int)(faceColor.G * light), (int)(faceColor.B * light));
+                                        faceColor = Color.FromArgb(1, 
+                                            (int)float.Round(faceColor.R * light.X), 
+                                            (int)float.Round(faceColor.G * light.Y), 
+                                            (int)float.Round(faceColor.B * light.Z));
                                     }
 
                                     p1 = new Vector3(viewportVerteces[vertexIds[0] - 1].X, 
@@ -175,13 +201,7 @@ namespace akg1my
                                             viewportVerteces[vertexIds[i + 1] - 1].Y,
                                             viewportVerteces[vertexIds[i + 1] - 1].Z);
 
-                                        // Console.Out.WriteLineAsync($"{p1}, {p2}, {p3}");
-                                        coordsInWindow = _drawer.PointInWindow((int)p1.X, (int)p1.Y) &&
-                                            _drawer.PointInWindow((int)p2.X, (int)p2.Y) &&
-                                            _drawer.PointInWindow((int)p3.X, (int)p3.Y);
-
-                                        if (coordsInWindow &&
-                                            p1 != p2 && p1 != p3 && p2 != p3)
+                                        if (p1 != p2 && p1 != p3 && p2 != p3)
                                         {
                                             _drawer.RasterizeTriangle(p1, p2, p3, faceColor);
                                         }
@@ -190,7 +210,7 @@ namespace akg1my
                             }
                             else
                             {
-                                if (_backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
+                                if (obj.IsAlwaysVisible || _backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
                                 {
                                     vi = viewportVerteces[vertexIds.Last() - 1];
                                     vj = viewportVerteces[vertexIds[0] - 1];
@@ -198,18 +218,18 @@ namespace akg1my
                                     /*Console.WriteLine($"draw line from ({(int)vi.X}, {(int)vi.Y}) to ({(int)vj.X}, {(int)vj.Y})");*/
                                     /*Console.Out.WriteLineAsync($"{_windowHeight}, {_windowWidth}");*/
 
-                                    coordsInWindow = _drawer.PointInWindow((int)vi.X, (int)vi.Y) &&
-                                        _drawer.PointInWindow((int)vj.X, (int)vj.Y);
+                                    coordsInWindow = _drawer.PointInWindow((int)float.Round(vi.X), (int)float.Round(vi.Y)) &&
+                                        _drawer.PointInWindow((int)float.Round(vj.X), (int)float.Round(vj.Y));
                                     if (coordsInWindow)
-                                        _drawer.DrawLine((int)vi.X, (int)vi.Y, (int)vj.X, (int)vj.Y, edgeColor);
+                                        _drawer.DrawLine((int)float.Round(vi.X), (int)float.Round(vi.Y), (int)float.Round(vj.X), (int)float.Round(vj.Y), edgeColor);
                                     for (int i = 0; i < vertexIds.Count - 1; i++)
                                     {
                                         vi = viewportVerteces[vertexIds[i] - 1];
                                         vj = viewportVerteces[vertexIds[i + 1] - 1];
-                                        coordsInWindow = _drawer.PointInWindow((int)vi.X, (int)vi.Y) &&
-                                            _drawer.PointInWindow((int)vj.X, (int)vj.Y);
+                                        coordsInWindow = _drawer.PointInWindow((int)float.Round(vi.X), (int)float.Round(vi.Y)) &&
+                                            _drawer.PointInWindow((int)float.Round(vj.X), (int)float.Round(vj.Y));
                                         if (coordsInWindow)
-                                            _drawer.DrawLine((int)vi.X, (int)vi.Y, (int)vj.X, (int)vj.Y, edgeColor);
+                                            _drawer.DrawLine((int)float.Round(vi.X), (int)float.Round(vi.Y), (int)float.Round(vj.X), (int)float.Round(vj.Y), edgeColor);
 
                                         /*Console.WriteLine($"draw line from ({(int)vi.X}, {(int)vi.Y}) to ({(int)vj.X}, {(int)vj.Y})");*/
                                     }
@@ -220,6 +240,7 @@ namespace akg1my
                 }
                 writableBitmap.AddDirtyRect(rect);
                 writableBitmap.Unlock();
+                
                 Image.Source = writableBitmap;
                 _frameCount++;
 
@@ -251,9 +272,9 @@ namespace akg1my
                 var b = new Vector3(verteces[vertexIds[1] - 1].X,
                     verteces[vertexIds[1] - 1].Y,
                     verteces[vertexIds[1] - 1].Z);
-                var c = new Vector3(verteces[vertexIds[2] - 1].X,
-                    verteces[vertexIds[2] - 1].Y,
-                    verteces[vertexIds[2] - 1].Z);
+                var c = new Vector3(verteces[vertexIds[^1] - 1].X,
+                    verteces[vertexIds[^1] - 1].Y,
+                    verteces[vertexIds[^1] - 1].Z);
                 faceNormal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
             }
             return faceNormal;
@@ -263,11 +284,11 @@ namespace akg1my
             Vector4 faceCenter = Vector4.Zero;
             List<int> vertexIds = face.VertexIds.ToList();
 
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < vertexIds.Count; i++)
             {
                 faceCenter += verteces[vertexIds[i] - 1];
             }
-            faceCenter /= 1;
+            faceCenter /= vertexIds.Count;
             var faceCenter3D = new Vector3(faceCenter.X, faceCenter.Y, faceCenter.Z);
 
             return faceCenter3D;
@@ -294,8 +315,8 @@ namespace akg1my
         {
             Image.Width = (int)e.NewSize.Width;
             Image.Height = (int)e.NewSize.Height;
-            _windowWidth = (int)Width;
-            _windowHeight = (int)Height;
+            _windowWidth = (int)Width * _superSamplingCoef;
+            _windowHeight = (int)Height * _superSamplingCoef;
             _drawer.Width = _windowWidth;
             _drawer.Height = _windowHeight;
             _drawer.ZBuffer = Enumerable.Repeat(float.MaxValue, _windowWidth * _windowHeight).ToArray(); ;

@@ -20,8 +20,8 @@ namespace akg1my
                 _eye = value;
 
                 _radialDistance = _eye.Length();
-                _polarAngle = MathF.Acos(_eye.Z / _radialDistance);
-                _azimuthalAngle = Math.Sign(_eye.Y) * MathF.Acos(_eye.X / MathF.Sqrt(MathF.Pow(_eye.X, 2) + MathF.Pow(_eye.Y, 2)));
+                _polarAngle = float.Acos(_eye.Y / _radialDistance);
+                _azimuthalAngle = float.Atan(_eye.Z / _eye.X); ;
 
                 _viewMatrix = Matrix4x4.Transpose(Matrix4x4.CreateLookAt(_eye, _target, _up));
             }
@@ -208,6 +208,7 @@ namespace akg1my
             _eye = new Vector3(_radialDistance * sinPolarAngle * cosAzimuthalAngle,
                                _radialDistance * cosPolarAngle,
                                _radialDistance * sinPolarAngle * sinAzimuthalAngle);
+
         }
 
         public float PolarAngle
@@ -267,17 +268,8 @@ namespace akg1my
             else
             {
                 _radialDistance = _eye.Length();
-                _polarAngle = float.Acos(_eye.Z / _radialDistance);
-
-                if (!(_eye.X == 0 && _eye.Y == 0))
-                {
-                    _azimuthalAngle = float.Sign(_eye.Y) * float.Acos(_eye.X / float.Sqrt(float.Pow(_eye.X, 2) + float.Pow(_eye.Y, 2)));
-                }
-                else
-                {
-                    _azimuthalAngle = 0;
-                }
-
+                _polarAngle = float.Acos(_eye.Y / _radialDistance);
+                _azimuthalAngle = float.Atan2(_eye.Z, _eye.X);
             }
 
             _perspectiveProjectionMatrix = Matrix4x4.Transpose(Matrix4x4.CreatePerspectiveFieldOfView(_fov, AspectRatio, _zNear, _zFar));

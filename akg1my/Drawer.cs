@@ -88,7 +88,7 @@ namespace akg1my
             float slope = (d1 - d0) / (i1 - i0);
             float d = d0;
 
-            for (int i = (int)i0; i <= (int)i1; i++)
+            for (int i = (int)float.Round(i0); i <= (int)float.Round(i1); i++)
             {
                 values.Add(d);
                 d += slope;
@@ -102,12 +102,9 @@ namespace akg1my
             if (v2.Y < v0.Y) (v2, v0) = (v0, v2);
             if (v2.Y < v1.Y) (v2, v1) = (v1, v2);
 
-            int x0 = (int)v0.X, x1 = (int)v1.X, x2 = (int)v2.X;
-            int y0 = (int)v0.Y, y1 = (int)v1.Y, y2 = (int)v2.Y;
+            int x0 = (int)float.Round(v0.X), x1 = (int)float.Round(v1.X), x2 = (int)float.Round(v2.X);
+            int y0 = (int)float.Round(v0.Y), y1 = (int)float.Round(v1.Y), y2 = (int)float.Round(v2.Y);
             float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
-
-            /*if (y0 <= 0 || y2 >= Height || x0 <= 0 || x2 >= Width)
-                return;*/
 
             var x01 = Interpolate(y0, x0, y1, x1);
             var x12 = Interpolate(y1, x1, y2, x2);
@@ -140,17 +137,24 @@ namespace akg1my
                 (zLeft, zRight) = (z012, z02);
             }
 
+            int oldY0 = y0;
+            y0 = int.Max(0, y0);
+            y2 = int.Min(Height - 1, y2);
+
             for (int y = y0; y <= y2; y++)
             {
-                int index = y - y0;
+                int index = y - oldY0;
 
                 var zSegment = Interpolate(xLeft[index], zLeft[index], xRight[index], zRight[index]);
 
-                for (int x = (int)xLeft[index]; x <= (int)xRight[index]; x++)
+                x0 = int.Max(0, (int)float.Round(xLeft[index]));
+                x2 = int.Min(Width - 1, (int)float.Round(xRight[index]));
+
+                for (int x = x0; x <= x2; x++)
                 {
-                    if (zSegment[x - (int)xLeft[index]] < ZBuffer[y * Width + x])
+                    if (zSegment[x - x0] < ZBuffer[y * Width + x])
                     {
-                        ZBuffer[y * Width + x] = zSegment[x - (int)xLeft[index]];
+                        ZBuffer[y * Width + x] = zSegment[x - x0];
 
                         byte* pixelPtr = Data + y * Stride + x * 3;
 

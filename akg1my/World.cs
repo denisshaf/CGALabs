@@ -1,6 +1,5 @@
-﻿using System.Numerics;
-using System.Reflection.Emit;
-using System.Windows.Media.Media3D;
+﻿using System.Drawing;
+using System.Numerics;
 
 namespace akg1my
 {
@@ -9,27 +8,26 @@ namespace akg1my
         public List<WorldObject> WorldObjects { get { return _worldObjects; } }
 
         private Camera _camera;
-        private ILight _light;
+        private Light _light;
         private List<WorldObject> _worldObjects = new List<WorldObject>();
 
         public World(int windowWidth, int windowHeight)
         {
 
-            var eye = new Vector3(0, 0, -500);
+            var eye = new Vector3(0, 0, -5);
             var target = new Vector3(0, 0, 0);
             var up = new Vector3(0, 1, 0);
 
             _camera = new Camera(eye, target, up, 0.1f, 10000f, windowWidth, windowHeight, 70);
             _camera.Projection = Camera.ProjectionType.Perspective;
 
-            var lightPosition = new Vector3(2, 2, 2);
+            var lightPosition = new Vector3(0, 0, -5);
             float lightIntensity = 1;
             _light = new LambertsLight(lightPosition, lightIntensity);
-
-            Console.WriteLine($"AzimuthalAngle: {_camera.AzimuthalAngle / float.Pi * 180}, PolarAngle: {_camera.PolarAngle / float.Pi * 180}");
+            _light.Color = Color.Red;
         }
 
-        public float CalculateLight(Vector3 point, Vector3 normal)
+        public Vector3 CalculateLight(Vector3 point, Vector3 normal)
         {
             return _light.CalculateLight(point, normal);
         }
@@ -52,7 +50,7 @@ namespace akg1my
 
             for (var i = 0; i < verteces.Count; i++)
             {
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(GetWorldMatrix(worldObject)));
+                verteces[i] = Vector4.Transform(verteces[i], GetWorldMatrix(worldObject));
             }
 
             return verteces;
@@ -63,7 +61,7 @@ namespace akg1my
 
             for (var i = 0; i < verteces.Count; i++)
             {
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(GetWorldMatrix(worldObject)));
+                verteces[i] = Vector4.Transform(verteces[i], GetWorldMatrix(worldObject));
                 verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ViewMatrix));
             }
 
@@ -76,17 +74,12 @@ namespace akg1my
 
             for (var i = 0; i < verteces.Count; i++)
             {
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(GetWorldMatrix(worldObject)));
+                verteces[i] = Vector4.Transform(verteces[i], GetWorldMatrix(worldObject));
                 verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ViewMatrix));
                 verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ProjectionMatrix));
                 verteces[i] = Vector4.Divide(verteces[i], verteces[i].W);
                 verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ViewportMatrix));
-
             }
-            /*PrintMatrix(Matrix4x4.Transpose(_camera.ViewMatrix));
-            PrintMatrix(Matrix4x4.Transpose(_camera.ProjectionMatrix));
-            PrintMatrix(Matrix4x4.Transpose(_camera.ViewportMatrix));*/
-            /*Console.WriteLine(verteces[0]);*/
 
             return verteces;
         }
@@ -94,10 +87,11 @@ namespace akg1my
         private Matrix4x4 GetWorldMatrix(WorldObject worldObject)
         {
             Matrix4x4 fromObjToWorldMatrix =
+                    Matrix4x4.CreateScale(worldObject.ScaleInWorldSpace) *
+                    Matrix4x4.CreateTranslation(worldObject.PositionInWorldSpace) *
                     Matrix4x4.CreateRotationX(worldObject.RotationInWorldSpace.X) *
                     Matrix4x4.CreateRotationY(worldObject.RotationInWorldSpace.Y) *
-                    Matrix4x4.CreateRotationZ(worldObject.RotationInWorldSpace.Z) *
-                    Matrix4x4.CreateTranslation(worldObject.PositionInWorldSpace);
+                    Matrix4x4.CreateRotationZ(worldObject.RotationInWorldSpace.Z);
             return fromObjToWorldMatrix;
         }
 
@@ -112,9 +106,6 @@ namespace akg1my
 
             if (_camera.RadialDistance <= 0)
                 _camera.RadialDistance = 0.05f;
-
-            /*Console.WriteLine($"AzimuthalAngle: {_camera.AzimuthalAngle / float.Pi * 180}, PolarAngle: {_camera.PolarAngle / float.Pi * 180}");*/
-            /*Console.WriteLine($"Zoom radius: {_camera.RadialDistance}, polar: {_camera.PolarAngle}, azimuthal: {_camera.AzimuthalAngle}, eye: {_camera.Eye}");*/
         }
         public void Rotate(float polarAngleDelta, float azimuthalAngleDelta) 
         {
@@ -128,10 +119,6 @@ namespace akg1my
                 _camera.PolarAngle = float.Pi - 0.001f;
             if (_camera.PolarAngle <= 0)
                 _camera.PolarAngle = 0.001f;
-
-            /*Console.WriteLine($"AzimuthalAngle: {_camera.AzimuthalAngle / float.Pi * 180}, PolarAngle: {_camera.PolarAngle / float.Pi * 180}");*/
-
-            /*Console.WriteLine($"Rotate radius: {_camera.RadialDistance}, polar: {_camera.PolarAngle}, azimuthal: {_camera.AzimuthalAngle}, eye: {_camera.Eye}");*/
         }
 
         private void PrintMatrix(Matrix4x4 matrix)
