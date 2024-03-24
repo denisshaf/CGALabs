@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 
-namespace akg1my
+namespace akg1my.GraphicalObjects
 {
     internal class WorldObject
     {
@@ -38,7 +38,7 @@ namespace akg1my
             IsAlwaysVisible = false;
         }
 
-        public Vector3 PositionInWorldSpace{ get; set; }
+        public Vector3 PositionInWorldSpace { get; set; }
         public Vector3 RotationInWorldSpace { get; set; }
         public Vector3 ScaleInWorldSpace { get; set; }
     }

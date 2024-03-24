@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace akg1my
+namespace akg1my.GraphicalObjects
 {
     internal class Camera
     {
@@ -51,13 +51,13 @@ namespace akg1my
             }
         }
         public bool Moved { get; set; }
-        public float ZFar 
-        { 
-            get 
+        public float ZFar
+        {
+            get
             {
                 return _zFar;
-            } 
-            set 
+            }
+            set
             {
                 _zFar = value;
 
@@ -66,7 +66,7 @@ namespace akg1my
 
                 _perspectiveProjectionMatrix.M33 = _orthographicProjectionMatrix.M33 * _zFar;
                 _perspectiveProjectionMatrix.M33 = _orthographicProjectionMatrix.M34 * _zFar;
-            } 
+            }
         }
         public float ZNear
         {
@@ -119,7 +119,7 @@ namespace akg1my
 
                 _perspectiveProjectionMatrix.M11 = 1.0f / (AspectRatio * float.Tan(_fov / 2));
 
-                _viewportMatrix.M22 = - _height >> 1;
+                _viewportMatrix.M22 = -_height >> 1;
                 _viewportMatrix.M24 = _height >> 1;
             }
         }
@@ -131,19 +131,19 @@ namespace akg1my
             }
         }
 
-        public float FOV 
+        public float FOV
         {
-            get 
-            { 
-                return _fov * (180 / float.Pi); 
+            get
+            {
+                return _fov * (180 / float.Pi);
             }
-            set 
-            { 
+            set
+            {
                 _fov = value * float.Pi / 180;
 
                 _perspectiveProjectionMatrix.M11 = 1.0f / (AspectRatio * float.Tan(_fov / 2));
-                _perspectiveProjectionMatrix.M22 = 1.0f / (float.Tan(_fov / 2));
-            } 
+                _perspectiveProjectionMatrix.M22 = 1.0f / float.Tan(_fov / 2);
+            }
         }
 
 
@@ -151,12 +151,12 @@ namespace akg1my
 
         public Matrix4x4 ProjectionMatrix
         {
-            get 
+            get
             {
-                return Projection == ProjectionType.Orthographic ? 
-                    _orthographicProjectionMatrix : 
+                return Projection == ProjectionType.Orthographic ?
+                    _orthographicProjectionMatrix :
                     _perspectiveProjectionMatrix;
-            } 
+            }
         }
 
         public Matrix4x4 ViewMatrix
@@ -185,8 +185,8 @@ namespace akg1my
             }
         }
 
-        public float RadialDistance 
-        { 
+        public float RadialDistance
+        {
             get
             {
                 return _radialDistance;
@@ -248,9 +248,9 @@ namespace akg1my
         private Vector3 _eye, _target, _up;
         private float _radialDistance, _polarAngle, _azimuthalAngle;
 
-        public Camera(Vector3 position, Vector3 target, Vector3 up, float zNear, float zFar, int width, int height, float fov) 
+        public Camera(Vector3 position, Vector3 target, Vector3 up, float zNear, float zFar, int width, int height, float fov)
         {
-            _eye = position; 
+            _eye = position;
             _target = target;
             _up = up;
             _zFar = zFar;
