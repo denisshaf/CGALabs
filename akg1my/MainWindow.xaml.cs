@@ -26,14 +26,20 @@ namespace akg1my
         private TextBlock _textBlock;
         private int _frameCount;
         private DoublePoint _lastMousePosition;
-        private bool _rasterizationOn, _backFacesOn, _lightOn, _flatShadingOn;
-        private int _superSamplingCoef = 3;
+        private bool _rasterizationOn, _backFacesOn, _lightOn, _flatShadingOn, _texturesOn;
+        private int _superSamplingCoef = 2;
 
         public MainWindow()
         {
             InitializeComponent();
-            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\knight\knight.obj");
-            var model = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
+            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\Box\Box.obj");
+            var mtlParser = new MtlParser(@"D:\Study\АКГ\akg1my\objects\Box\Box.mtl");
+            ImageData diffuseMap = mtlParser.GetMapKdBytes();
+            ImageData normalsMap = mtlParser.GetNormBytes();
+            ImageData mraoMap = mtlParser.GetMapMraoBytes();
+            var model = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals, 
+                diffuseMap, normalsMap, mraoMap);
+
             parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\sphere\sphere.obj");
             var sphere = new WorldObject(parser.Vertices, parser.Faces, parser.VertexTextures, parser.VertexNormals);
             parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\XAxis.obj");
@@ -71,6 +77,7 @@ namespace akg1my
             _backFacesOn = false;
             _lightOn = true;
             _flatShadingOn = true;
+            _texturesOn = false;
 
             DrawFrame();
         }
@@ -141,7 +148,7 @@ namespace akg1my
                 Int32Rect rect = new Int32Rect(0, 0, _windowWidth, _windowHeight);
                 IntPtr buffer = writableBitmap.BackBuffer;
                 int stride = writableBitmap.BackBufferStride;
-                Array.Fill(_drawer.ZBuffer, float.MaxValue);
+                Array.Fill(_drawer.ZBuffer, 1f);
 
                 unsafe
                 {
@@ -150,6 +157,7 @@ namespace akg1my
                         var (viewportVerteces, isOut) = _world.TransformObjectsVerteces(obj);
                         var worldVerteces = _world.TransformVertecesToWorld(obj);
                         var normals = obj.VertexNormals;
+                        var vertexTextures = obj.VertexTextures;
                         var faces = obj.Faces;
                         byte* pixels = (byte*)buffer.ToPointer();
                         // Console.Out.WriteLineAsync($"{buffer}");
@@ -166,6 +174,7 @@ namespace akg1my
                         {
                             var vertexIds = face.VertexIds.ToList();
                             var normalIds = face.NormalIds.ToList();
+                            var textureIds = face.TextureIds.ToList();
 
                             bool throwAway = vertexIds.Any(i => isOut[i - 1]);
 
@@ -184,6 +193,7 @@ namespace akg1my
                                         Vector3 p0, p1, p2;
                                         Vector3 w0, w1, w2;
                                         Vector3 n0, n1, n2;
+                                        Vector3 t0, t1, t2;
                                         Color faceColor = obj.Color;
 
                                         p0 = new Vector3(viewportVerteces[vertexIds[0] - 1].X,
@@ -230,8 +240,27 @@ namespace akg1my
                                                     n2 = new Vector3(normals[normalIds[i + 1] - 1].X,
                                                         normals[normalIds[i + 1] - 1].Y,
                                                         normals[normalIds[i + 1] - 1].Z);
-                                                    _drawer.RasterizeTrianglePhong(new(p0, p1, p2, w0, w1, w2, n0, n1, n2), faceColor,
-                                                        _lightOn ? _world.CalculateLight : null);
+
+                                                    if (_texturesOn && obj.DiffuseMap != null && vertexTextures != null)
+                                                    {
+                                                        t0 = new Vector3(vertexTextures[textureIds[0] - 1].X,
+                                                            vertexTextures[textureIds[0] - 1].Y,
+                                                            vertexTextures[textureIds[0] - 1].Z);
+                                                        t1 = new Vector3(vertexTextures[textureIds[i] - 1].X,
+                                                            vertexTextures[textureIds[i] - 1].Y,
+                                                            vertexTextures[textureIds[i] - 1].Z);
+                                                        t2 = new Vector3(vertexTextures[textureIds[i + 1] - 1].X,
+                                                            vertexTextures[textureIds[i + 1] - 1].Y,
+                                                            vertexTextures[textureIds[i + 1] - 1].Z);
+
+                                                        _drawer.RasterizeTriangleTexture(new(p0, p1, p2, w0, w1, w2, n0, n1, n2, t0, t1, t2), obj.DiffuseMap,
+                                                            _lightOn ? _world.CalculateLight : null);
+                                                    }
+                                                    else
+                                                    {
+                                                        _drawer.RasterizeTrianglePhong(new(p0, p1, p2, w0, w1, w2, n0, n1, n2), faceColor,
+                                                            _lightOn ? _world.CalculateLight : null);
+                                                    }
                                                 }
                                             }
                                         }
@@ -346,6 +375,9 @@ namespace akg1my
                 case Key.F:
                     _flatShadingOn = !_flatShadingOn;
                     break;
+                case Key.T:
+                    _texturesOn = !_texturesOn;
+                    break;
                 default:
                     break;
             }
@@ -359,7 +391,7 @@ namespace akg1my
             _windowHeight = (int)Height * _superSamplingCoef;
             _drawer.Width = _windowWidth;
             _drawer.Height = _windowHeight;
-            _drawer.ZBuffer = Enumerable.Repeat(float.MaxValue, _windowWidth * _windowHeight).ToArray(); ;
+            _drawer.ZBuffer = Enumerable.Repeat(1f, _windowWidth * _windowHeight).ToArray(); ;
             _world.Resize(_windowWidth, _windowHeight);
         }
 

@@ -30,15 +30,16 @@ namespace akg1my.Light
         {
             Vector3 dir = Position - point;
             Vector3 look = eye - point;
+            float intensity = 0.5f;
 
             float diffusedAngleCos = Vector3.Dot(dir, normal) / (dir.Length() * normal.Length());
-            Vector3 diffusedLight = DiffusedIntensity * float.Max(0, diffusedAngleCos) * new Vector3(DiffusedColor.R, DiffusedColor.G, DiffusedColor.B) / 255f;
+            Vector3 diffusedLight = DiffusedIntensity * intensity * float.Max(0, diffusedAngleCos) * new Vector3(DiffusedColor.R, DiffusedColor.G, DiffusedColor.B) / 255f;
 
-            Vector3 backgroundLight = BackgroundIntensity * new Vector3(BackgroundColor.R, BackgroundColor.G, BackgroundColor.B) / 255f;
+            Vector3 backgroundLight = BackgroundIntensity * intensity * new Vector3(BackgroundColor.R, BackgroundColor.G, BackgroundColor.B) / 255f;
 
             Vector3 reflectionVector = dir - 2 * diffusedAngleCos * normal;
             float mirrorAngleCos = float.Max(0, Vector3.Dot(reflectionVector, look) / (reflectionVector.Length() * look.Length()));
-            Vector3 mirrorLight = MirrorIntensity * float.Pow(mirrorAngleCos, shine) * new Vector3(MirrorColor.R, MirrorColor.G, MirrorColor.B) / 255f;
+            Vector3 mirrorLight = MirrorIntensity * intensity * float.Pow(mirrorAngleCos, shine) * new Vector3(MirrorColor.R, MirrorColor.G, MirrorColor.B) / 255f;
 
             Vector3 result = diffusedLight + backgroundLight + mirrorLight;
             if(result.X >= 1)

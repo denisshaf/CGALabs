@@ -14,7 +14,7 @@ namespace akg1my.GraphicalObjects
 
         public World(int windowWidth, int windowHeight)
         {
-            var eye = new Vector3(0, 0, -5);
+            var eye = new Vector3(5, 5, 12);
             var target = new Vector3(0, 0, 0);
             var up = new Vector3(0, 1, 0);
 
@@ -35,7 +35,7 @@ namespace akg1my.GraphicalObjects
         public Vector3 CalculateLight(Vector3 point, Vector3 normal)
         {
             Vector3 resultLight = Vector3.Zero;
-            float shine = 10f;
+            float shine = 100f;
 
             foreach (var light in _lightsLambert)
             {

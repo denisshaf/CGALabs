@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using akg1my.Parser;
+using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static System.Formats.Asn1.AsnWriter;
@@ -18,7 +19,7 @@ namespace akg1my.GraphicalObjects
         {
             Width = width;
             Height = height;
-            ZBuffer = Enumerable.Repeat(float.MaxValue, width * height).ToArray();
+            ZBuffer = Enumerable.Repeat(1f, width * height).ToArray();
         }
 
         public bool PointInWindow(int x, int y)
@@ -83,14 +84,16 @@ namespace akg1my.GraphicalObjects
         // i - independent value, d - dependent value
         protected List<float> Interpolate(float i0, float d0, float i1, float d1)
         {
-            if (i0 == i1)
+            int roundedI0 = (int)float.Round(i0);
+            int roundedI1 = (int)float.Round(i1);
+            if (roundedI0 == roundedI1)
                 return [d0];
 
             var values = new List<float>();
-            float slope = (d1 - d0) / (i1 - i0);
+            float slope = (d1 - d0) / (roundedI1 - roundedI0);
             float d = d0;
 
-            for (int i = (int)float.Round(i0); i <= (int)float.Round(i1); i++)
+            for (int i = roundedI0; i <= roundedI1; i++)
             {
                 values.Add(d);
                 d += slope;
@@ -100,14 +103,16 @@ namespace akg1my.GraphicalObjects
 
         protected List<Vector3> Interpolate(float i0, Vector3 d0, float i1, Vector3 d1)
         {
-            if (i0 == i1)
+            int roundedI0 = (int)float.Round(i0);
+            int roundedI1 = (int)float.Round(i1);
+            if (roundedI0 == roundedI1)
                 return [d0];
 
             var values = new List<Vector3>();
-            Vector3 slope = (d1 - d0) / (i1 - i0);
+            Vector3 slope = (d1 - d0) / (roundedI1 - roundedI0);
             Vector3 d = d0;
 
-            for (int i = (int)float.Round(i0); i <= (int)float.Round(i1); i++)
+            for (int i = roundedI0; i <= roundedI1; i++)
             {
                 values.Add(d);
                 d += slope;
@@ -153,22 +158,23 @@ namespace akg1my.GraphicalObjects
 
             int x0 = (int)float.Round(v0.X), x1 = (int)float.Round(v1.X), x2 = (int)float.Round(v2.X);
             int y0 = (int)float.Round(v0.Y), y1 = (int)float.Round(v1.Y), y2 = (int)float.Round(v2.Y);
-            float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
+            // float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
+            float invZ0 = 1 / v0.Z, invZ1 = 1 / v1.Z, invZ2 = 1 / v2.Z;
 
             var (x012, x02) = InterpolateSides(y0, y1, y2, x0, x1, x2);
-            var (z012, z02) = InterpolateSides(y0, y1, y2, z0, z1, z2);
+            var (invZ012, invZ02) = InterpolateSides(y0, y1, y2, invZ0, invZ1, invZ2);
 
             int middle = x012.Count / 2;
             List<float> xLeft, xRight, zLeft, zRight;
             if (x02[middle] < x012[middle])
             {
                 (xLeft, xRight) = (x02, x012);
-                (zLeft, zRight) = (z02, z012);
+                (zLeft, zRight) = (invZ02, invZ012);
             }
             else
             {
                 (xLeft, xRight) = (x012, x02);
-                (zLeft, zRight) = (z012, z02);
+                (zLeft, zRight) = (invZ012, invZ02);
             }
 
             int oldY0 = y0;
@@ -188,7 +194,7 @@ namespace akg1my.GraphicalObjects
 
                 for (int x = x0; x <= x2; x++)
                 {
-                    if (zSegment[x - x0] < ZBuffer[y * Width + x])
+                    if (zSegment[x - x0] > ZBuffer[y * Width + x])
                     {
                         ZBuffer[y * Width + x] = zSegment[x - x0];
 
@@ -231,10 +237,11 @@ namespace akg1my.GraphicalObjects
 
             int x0 = (int)float.Round(v0.X), x1 = (int)float.Round(v1.X), x2 = (int)float.Round(v2.X);
             int y0 = (int)float.Round(v0.Y), y1 = (int)float.Round(v1.Y), y2 = (int)float.Round(v2.Y);
-            float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
+            // float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
+            float invZ0 = 1 / v0.Z, invZ1 = 1 / v1.Z, invZ2 = 1 / v2.Z;
 
             var (x012, x02) = InterpolateSides(y0, y1, y2, x0, x1, x2);
-            var (z012, z02) = InterpolateSides(y0, y1, y2, z0, z1, z2);
+            var (invZ012, invZ02) = InterpolateSides(y0, y1, y2, invZ0, invZ1, invZ2);
             var (n012, n02) = InterpolateSides(y0, y1, y2, n0, n1, n2);
             var (w012, w02) = InterpolateSides(y0, y1, y2, w0, w1, w2);
 
@@ -246,14 +253,14 @@ namespace akg1my.GraphicalObjects
             if (x02[middle] < x012[middle])
             {
                 (xLeft, xRight) = (x02, x012);
-                (zLeft, zRight) = (z02, z012);
+                (zLeft, zRight) = (invZ02, invZ012);
                 (nLeft, nRight) = (n02, n012);
                 (wLeft, wRight) = (w02, w012);
             }
             else
             {
                 (xLeft, xRight) = (x012, x02);
-                (zLeft, zRight) = (z012, z02);
+                (zLeft, zRight) = (invZ012, invZ02);
                 (nLeft, nRight) = (n012, n02);
                 (wLeft, wRight) = (w012, w02);
             }
@@ -277,7 +284,7 @@ namespace akg1my.GraphicalObjects
 
                 for (int x = x0; x <= x2; x++)
                 {
-                    if (zSegment[x - x0] < ZBuffer[y * Width + x])
+                    if (zSegment[x - x0] > ZBuffer[y * Width + x])
                     {
                         ZBuffer[y * Width + x] = zSegment[x - x0];
 
@@ -288,6 +295,113 @@ namespace akg1my.GraphicalObjects
                         *pixelPtr++ = (byte)(baseColor.B * lightVector.X);
                         *pixelPtr++ = (byte)(baseColor.G * lightVector.Y);
                         *pixelPtr = (byte)(baseColor.R * lightVector.Z);
+                    }
+                }
+            }
+        }
+        public unsafe void RasterizeTriangleTexture(Triangle triangle, ImageData diffuseMap, CalculateLightDelegate? calculateLight)
+        {
+            Vector3 v0 = triangle.v0, v1 = triangle.v1, v2 = triangle.v2;
+            Vector3 n0 = triangle.n0, n1 = triangle.n1, n2 = triangle.n2;
+            Vector3 w0 = triangle.w0, w1 = triangle.w1, w2 = triangle.w2;
+            Vector3 t0 = triangle.t0, t1 = triangle.t1, t2 = triangle.t2;
+
+            if (v1.Y < v0.Y)
+            {
+                (v1, v0) = (v0, v1);
+                (n1, n0) = (n0, n1);
+                (w1, w0) = (w0, w1);
+                (t1, t0) = (t0, t1);
+            }
+            if (v2.Y < v0.Y)
+            {
+                (v2, v0) = (v0, v2);
+                (n2, n0) = (n0, n2);
+                (w2, w0) = (w0, w2);
+                (t2, t0) = (t0, t2);
+            }
+            if (v2.Y < v1.Y)
+            {
+                (v2, v1) = (v1, v2);
+                (n2, n1) = (n1, n2);
+                (w2, w1) = (w1, w2);
+                (t2, t1) = (t1, t2);
+            }
+
+            int x0 = (int)float.Round(v0.X), x1 = (int)float.Round(v1.X), x2 = (int)float.Round(v2.X);
+            int y0 = (int)float.Round(v0.Y), y1 = (int)float.Round(v1.Y), y2 = (int)float.Round(v2.Y);
+            // float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
+            float invZ0 = 1 / v0.Z, invZ1 = 1 / v1.Z, invZ2 = 1 / v2.Z;
+
+            var (x012, x02) = InterpolateSides(y0, y1, y2, x0, x1, x2);
+            var (invZ012, invZ02) = InterpolateSides(y0, y1, y2, invZ0, invZ1, invZ2);
+            var (n012, n02) = InterpolateSides(y0, y1, y2, n0, n1, n2);
+            var (w012, w02) = InterpolateSides(y0, y1, y2, w0, w1, w2);
+            var (t012, t02) = InterpolateSides(y0, y1, y2, t0 * invZ0, t1 * invZ1, t2 * invZ2);
+
+            int middle = x012.Count / 2;
+            List<float> xLeft, xRight;
+            List<float> zLeft, zRight;
+            List<Vector3> nLeft, nRight;
+            List<Vector3> wLeft, wRight;
+            List<Vector3> tLeft, tRight;
+            if (x02[middle] < x012[middle])
+            {
+                (xLeft, xRight) = (x02, x012);
+                (zLeft, zRight) = (invZ02, invZ012);
+                (nLeft, nRight) = (n02, n012);
+                (wLeft, wRight) = (w02, w012);
+                (tLeft, tRight) = (t02, t012);
+            }
+            else
+            {
+                (xLeft, xRight) = (x012, x02);
+                (zLeft, zRight) = (invZ012, invZ02);
+                (nLeft, nRight) = (n012, n02);
+                (wLeft, wRight) = (w012, w02);
+                (tLeft, tRight) = (t012, t02);
+            }
+
+            int oldY0 = y0;
+            y0 = int.Max(0, y0);
+            y2 = int.Min(Height - 1, y2);
+
+            Vector3 lightVector;
+
+            for (int y = y0; y <= y2; y++)
+            {
+                int index = y - oldY0;
+
+                /*float xl = 848.5f, xr = 848.6f;
+                Vector3 tl = new(0.4039695f, 0.9932775f, 0), tr = new(0.40411997f, 0.9940798f, 0);
+                var i = Interpolate(xl, tl, xr, tr);*/
+
+                var zSegment = Interpolate(xLeft[index], zLeft[index], xRight[index], zRight[index]);
+                var nSegment = Interpolate(xLeft[index], nLeft[index], xRight[index], nRight[index]);
+                var wSegment = Interpolate(xLeft[index], wLeft[index], xRight[index], wRight[index]);
+                var tSegment = Interpolate(xLeft[index], tLeft[index], xRight[index], tRight[index]);
+
+                x0 = int.Max(0, (int)float.Round(xLeft[index]));
+                x2 = int.Min(Width - 1, (int)float.Round(xRight[index]));
+
+                for (int x = x0; x <= x2; x++)
+                {
+                    if (zSegment[x - x0] > ZBuffer[y * Width + x])
+                    {
+                        ZBuffer[y * Width + x] = zSegment[x - x0];
+
+                        lightVector = calculateLight?.Invoke(wSegment[x - x0], nSegment[x - x0]) ?? Vector3.One;
+
+                        byte* pixelPtr = Data + y * Stride + x * 3;
+
+                        int texXInd = (int)(tSegment[x - x0].X / zSegment[x - x0] * (diffuseMap.Width - 1));
+                        int texYInd = (int)(tSegment[x - x0].Y / zSegment[x - x0] * (diffuseMap.Height - 1));
+                        int texByteInd = texYInd * diffuseMap.Stride + texXInd * diffuseMap.ColorSize / 8;
+                        Vector3 color = new(diffuseMap.MapData[texByteInd], diffuseMap.MapData[texByteInd + 1], diffuseMap.MapData[texByteInd + 2]);
+
+                        *pixelPtr++ = (byte)(color.X * lightVector.X);
+                        *pixelPtr++ = (byte)(color.Y * lightVector.Y);
+                        *pixelPtr = (byte)(color.Z * lightVector.Z);
                     }
                 }
             }
