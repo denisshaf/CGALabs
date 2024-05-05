@@ -32,8 +32,8 @@ namespace akg1my
         public MainWindow()
         {
             InitializeComponent();
-            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\Box\Box.obj");
-            var mtlParser = new MtlParser(@"D:\Study\АКГ\akg1my\objects\Box\Box.mtl");
+            var parser = new ObjParser(@"D:\Study\АКГ\akg1my\objects\box\box.obj");
+            var mtlParser = new MtlParser(@"D:\Study\АКГ\akg1my\objects\box\box.mtl");
             ImageData diffuseMap = mtlParser.GetMapKdBytes();
             ImageData normalsMap = mtlParser.GetNormBytes();
             ImageData mraoMap = mtlParser.GetMapMraoBytes();
@@ -61,13 +61,14 @@ namespace akg1my
             model.ScaleInWorldSpace = new Vector3(1, 1, 1);
             model.Color = Color.White;
 
-            sphere.PositionInWorldSpace = new Vector3(0, 0, -6);
+            sphere.PositionInWorldSpace = new Vector3(5, 3, 4);
             sphere.ScaleInWorldSpace = new Vector3(0.01f, 0.01f, 0.01f);
 
             InitializeWindowComponents();
 
             _world = new World(_windowWidth, _windowHeight);
             _world.AddWorldObject(model);
+            // _world.AddWorldObject(sphere);
             /*_world.AddWorldObject(xAxis);
             _world.AddWorldObject(yAxis);
             _world.AddWorldObject(zAxis);
@@ -154,8 +155,12 @@ namespace akg1my
                 {
                     foreach (var obj in _world.WorldObjects)
                     {
-                        var (viewportVerteces, isOut) = _world.TransformObjectsVerteces(obj);
-                        var worldVerteces = _world.TransformVertecesToWorld(obj);
+                        var worldVertices = _world.TransformModelToWorld(obj);
+                        var viewVertices = _world.TransformWorldToView(worldVertices.ToList());
+                        var (clipVertices, isOut) = _world.TransformViewToClip(viewVertices.ToList());
+                        var projectionVertices = _world.TransformClipToProjection(clipVertices.ToList(), isOut);
+                        var viewportVertices = _world.TransformProjectionToViewport(projectionVertices.ToList(), isOut);
+
                         var normals = obj.VertexNormals;
                         var vertexTextures = obj.VertexTextures;
                         var faces = obj.Faces;
@@ -180,8 +185,8 @@ namespace akg1my
 
                             if (!throwAway)
                             {
-                                Vector3 faceNormal = CalculateFaceNormal(face, normals, worldVerteces);
-                                Vector3 faceCenter = CalculateFaceCenter(face, worldVerteces);
+                                Vector3 faceNormal = CalculateFaceNormal(face, normals, worldVertices);
+                                Vector3 faceCenter = CalculateFaceCenter(face, worldVertices);
 
                                 bool coordsInWindow;
 
@@ -190,43 +195,41 @@ namespace akg1my
                                 {
                                     if (obj.IsAlwaysVisible || _backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
                                     {
-                                        Vector3 p0, p1, p2;
+                                        Vector3 v0, v1, v2;
                                         Vector3 w0, w1, w2;
                                         Vector3 n0, n1, n2;
                                         Vector3 t0, t1, t2;
+                                        Vector4 p0, p1, p2;
                                         Color faceColor = obj.Color;
 
-                                        p0 = new Vector3(viewportVerteces[vertexIds[0] - 1].X,
-                                            viewportVerteces[vertexIds[0] - 1].Y,
-                                            viewportVerteces[vertexIds[0] - 1].Z);
-                                        w0 = new Vector3(worldVerteces[vertexIds[0] - 1].X,
-                                            worldVerteces[vertexIds[0] - 1].Y,
-                                            worldVerteces[vertexIds[0] - 1].Z);
-                                        if (normals.Count > 0)
-                                        {
-
-                                        }
+                                        v0 = new Vector3(viewportVertices[vertexIds[0] - 1].X,
+                                            viewportVertices[vertexIds[0] - 1].Y,
+                                            viewportVertices[vertexIds[0] - 1].Z);
+                                        w0 = new Vector3(worldVertices[vertexIds[0] - 1].X,
+                                            worldVertices[vertexIds[0] - 1].Y,
+                                            worldVertices[vertexIds[0] - 1].Z);
+                                        p0 = clipVertices[vertexIds[0] - 1];
 
                                         for (int i = 1; i < vertexIds.Count - 1; i++)
                                         {
-                                            p1 = new Vector3(viewportVerteces[vertexIds[i] - 1].X,
-                                                viewportVerteces[vertexIds[i] - 1].Y,
-                                                viewportVerteces[vertexIds[i] - 1].Z);
-                                            p2 = new Vector3(viewportVerteces[vertexIds[i + 1] - 1].X,
-                                                viewportVerteces[vertexIds[i + 1] - 1].Y,
-                                                viewportVerteces[vertexIds[i + 1] - 1].Z);
-                                            w1 = new Vector3(worldVerteces[vertexIds[i] - 1].X,
-                                                worldVerteces[vertexIds[i] - 1].Y,
-                                                worldVerteces[vertexIds[i] - 1].Z);
-                                            w2 = new Vector3(worldVerteces[vertexIds[i + 1] - 1].X,
-                                                worldVerteces[vertexIds[i + 1] - 1].Y,
-                                                worldVerteces[vertexIds[i + 1] - 1].Z);
+                                            v1 = new Vector3(viewportVertices[vertexIds[i] - 1].X,
+                                                viewportVertices[vertexIds[i] - 1].Y,
+                                                viewportVertices[vertexIds[i] - 1].Z);
+                                            v2 = new Vector3(viewportVertices[vertexIds[i + 1] - 1].X,
+                                                viewportVertices[vertexIds[i + 1] - 1].Y,
+                                                viewportVertices[vertexIds[i + 1] - 1].Z);
+                                            w1 = new Vector3(worldVertices[vertexIds[i] - 1].X,
+                                                worldVertices[vertexIds[i] - 1].Y,
+                                                worldVertices[vertexIds[i] - 1].Z);
+                                            w2 = new Vector3(worldVertices[vertexIds[i + 1] - 1].X,
+                                                worldVertices[vertexIds[i + 1] - 1].Y,
+                                                worldVertices[vertexIds[i + 1] - 1].Z);
 
-                                            if (p0 != p1 && p0 != p2 && p1 != p2)
+                                            if (v0 != v1 && v0 != v2 && v1 != v2)
                                             {
                                                 if (_flatShadingOn || normals.Count == 0)
                                                 {
-                                                    _drawer.RasterizeTriangleFlat(new(p0, p1, p2), faceColor, faceNormal, faceCenter,
+                                                    _drawer.RasterizeTriangleFlat(new(v0, v1, v2), faceColor, faceNormal, faceCenter,
                                                         _lightOn ? _world.CalculateLight : null);
                                                 }
                                                 else
@@ -252,13 +255,15 @@ namespace akg1my
                                                         t2 = new Vector3(vertexTextures[textureIds[i + 1] - 1].X,
                                                             vertexTextures[textureIds[i + 1] - 1].Y,
                                                             vertexTextures[textureIds[i + 1] - 1].Z);
+                                                        p1 = clipVertices[vertexIds[i] - 1];
+                                                        p2 = clipVertices[vertexIds[i + 1] - 1];
 
-                                                        _drawer.RasterizeTriangleTexture(new(p0, p1, p2, w0, w1, w2, n0, n1, n2, t0, t1, t2), obj.DiffuseMap,
+                                                        _drawer.RasterizeTriangleTexture(new(v0, v1, v2, w0, w1, w2, n0, n1, n2, t0, t1, t2, p0, p1, p2), obj.DiffuseMap, obj.NormalsMap,
                                                             _lightOn ? _world.CalculateLight : null);
                                                     }
                                                     else
                                                     {
-                                                        _drawer.RasterizeTrianglePhong(new(p0, p1, p2, w0, w1, w2, n0, n1, n2), faceColor,
+                                                        _drawer.RasterizeTrianglePhong(new(v0, v1, v2, w0, w1, w2, n0, n1, n2), faceColor,
                                                             _lightOn ? _world.CalculateLight : null);
                                                     }
                                                 }
@@ -270,8 +275,8 @@ namespace akg1my
                                 {
                                     if (obj.IsAlwaysVisible || _backFacesOn ? true : _world.IsVisible(faceCenter, faceNormal))
                                     {
-                                        vi = viewportVerteces[vertexIds.Last() - 1];
-                                        vj = viewportVerteces[vertexIds[0] - 1];
+                                        vi = viewportVertices[vertexIds.Last() - 1];
+                                        vj = viewportVertices[vertexIds[0] - 1];
 
                                         coordsInWindow = _drawer.PointInWindow((int)float.Round(vi.X), (int)float.Round(vi.Y)) &&
                                             _drawer.PointInWindow((int)float.Round(vj.X), (int)float.Round(vj.Y));
@@ -279,8 +284,8 @@ namespace akg1my
                                             _drawer.DrawLine((int)float.Round(vi.X), (int)float.Round(vi.Y), (int)float.Round(vj.X), (int)float.Round(vj.Y), edgeColor);
                                         for (int i = 0; i < vertexIds.Count - 1; i++)
                                         {
-                                            vi = viewportVerteces[vertexIds[i] - 1];
-                                            vj = viewportVerteces[vertexIds[i + 1] - 1];
+                                            vi = viewportVertices[vertexIds[i] - 1];
+                                            vj = viewportVertices[vertexIds[i + 1] - 1];
                                             coordsInWindow = _drawer.PointInWindow((int)float.Round(vi.X), (int)float.Round(vi.Y)) &&
                                                 _drawer.PointInWindow((int)float.Round(vj.X), (int)float.Round(vj.Y));
                                             if (coordsInWindow)

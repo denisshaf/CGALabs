@@ -22,6 +22,7 @@ namespace akg1my.GraphicalObjects
             ZBuffer = Enumerable.Repeat(1f, width * height).ToArray();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool PointInWindow(int x, int y)
         {
             /*if (x > 0 && y > 0 && x < width && y < height)
@@ -119,6 +120,7 @@ namespace akg1my.GraphicalObjects
             }
             return values;
         }
+
         private (List<float>, List<float>) InterpolateSides(float i0, float i1, float i2, float d0, float d1, float d2)
         {
             var d01 = Interpolate(i0, d0, i1, d1);
@@ -132,6 +134,7 @@ namespace akg1my.GraphicalObjects
 
             return (d02, d012);
         }
+
         private (List<Vector3>, List<Vector3>) InterpolateSides(float i0, float i1, float i2, Vector3 d0, Vector3 d1, Vector3 d2)
         {
             var d01 = Interpolate(i0, d0, i1, d1);
@@ -181,7 +184,7 @@ namespace akg1my.GraphicalObjects
             y0 = int.Max(0, y0);
             y2 = int.Min(Height - 1, y2);
 
-            Vector3 lightVector;
+            Vector3 lightVector = calculateLight?.Invoke(faceCenter, faceNormal) ?? Vector3.One;
 
             for (int y = y0; y <= y2; y++)
             {
@@ -197,8 +200,6 @@ namespace akg1my.GraphicalObjects
                     if (zSegment[x - x0] > ZBuffer[y * Width + x])
                     {
                         ZBuffer[y * Width + x] = zSegment[x - x0];
-
-                        lightVector = calculateLight?.Invoke(faceCenter, faceNormal) ?? Vector3.One;
 
                         byte* pixelPtr = Data + y * Stride + x * 3;
 
@@ -299,12 +300,13 @@ namespace akg1my.GraphicalObjects
                 }
             }
         }
-        public unsafe void RasterizeTriangleTexture(Triangle triangle, ImageData diffuseMap, CalculateLightDelegate? calculateLight)
+        public unsafe void RasterizeTriangleTexture(Triangle triangle, ImageData diffuseMap, ImageData? normalsMap, CalculateLightDelegate? calculateLight)
         {
             Vector3 v0 = triangle.v0, v1 = triangle.v1, v2 = triangle.v2;
             Vector3 n0 = triangle.n0, n1 = triangle.n1, n2 = triangle.n2;
             Vector3 w0 = triangle.w0, w1 = triangle.w1, w2 = triangle.w2;
             Vector3 t0 = triangle.t0, t1 = triangle.t1, t2 = triangle.t2;
+            Vector4 p0 = triangle.p0, p1 = triangle.p1, p2 = triangle.p2;
 
             if (v1.Y < v0.Y)
             {
@@ -312,6 +314,7 @@ namespace akg1my.GraphicalObjects
                 (n1, n0) = (n0, n1);
                 (w1, w0) = (w0, w1);
                 (t1, t0) = (t0, t1);
+                (p1, p0) = (p0, p1);
             }
             if (v2.Y < v0.Y)
             {
@@ -319,6 +322,7 @@ namespace akg1my.GraphicalObjects
                 (n2, n0) = (n0, n2);
                 (w2, w0) = (w0, w2);
                 (t2, t0) = (t0, t2);
+                (p2, p0) = (p0, p2);
             }
             if (v2.Y < v1.Y)
             {
@@ -326,22 +330,26 @@ namespace akg1my.GraphicalObjects
                 (n2, n1) = (n1, n2);
                 (w2, w1) = (w1, w2);
                 (t2, t1) = (t1, t2);
+                (p2, p1) = (p1, p2);
             }
 
             int x0 = (int)float.Round(v0.X), x1 = (int)float.Round(v1.X), x2 = (int)float.Round(v2.X);
             int y0 = (int)float.Round(v0.Y), y1 = (int)float.Round(v1.Y), y2 = (int)float.Round(v2.Y);
             // float z0 = v0.Z, z1 = v1.Z, z2 = v2.Z;
             float invZ0 = 1 / v0.Z, invZ1 = 1 / v1.Z, invZ2 = 1 / v2.Z;
+            float invZ0Proj = 1 / p0.Z, invZ1Proj = 1 / p1.Z, invZ2Proj = 1 / p2.Z;
 
             var (x012, x02) = InterpolateSides(y0, y1, y2, x0, x1, x2);
             var (invZ012, invZ02) = InterpolateSides(y0, y1, y2, invZ0, invZ1, invZ2);
+            var (invZ012proj, invZ02proj) = InterpolateSides(y0, y1, y2, invZ0Proj, invZ1Proj, invZ2Proj);
             var (n012, n02) = InterpolateSides(y0, y1, y2, n0, n1, n2);
             var (w012, w02) = InterpolateSides(y0, y1, y2, w0, w1, w2);
-            var (t012, t02) = InterpolateSides(y0, y1, y2, t0 * invZ0, t1 * invZ1, t2 * invZ2);
+            var (t012, t02) = InterpolateSides(y0, y1, y2, t0 * invZ0Proj, t1 * invZ1Proj, t2 * invZ2Proj);
 
             int middle = x012.Count / 2;
             List<float> xLeft, xRight;
             List<float> zLeft, zRight;
+            List<float> zLeftProj, zRightProj;
             List<Vector3> nLeft, nRight;
             List<Vector3> wLeft, wRight;
             List<Vector3> tLeft, tRight;
@@ -349,6 +357,7 @@ namespace akg1my.GraphicalObjects
             {
                 (xLeft, xRight) = (x02, x012);
                 (zLeft, zRight) = (invZ02, invZ012);
+                (zLeftProj, zRightProj) = (invZ02proj, invZ012proj);
                 (nLeft, nRight) = (n02, n012);
                 (wLeft, wRight) = (w02, w012);
                 (tLeft, tRight) = (t02, t012);
@@ -357,6 +366,7 @@ namespace akg1my.GraphicalObjects
             {
                 (xLeft, xRight) = (x012, x02);
                 (zLeft, zRight) = (invZ012, invZ02);
+                (zLeftProj, zRightProj) = (invZ012proj, invZ02proj);
                 (nLeft, nRight) = (n012, n02);
                 (wLeft, wRight) = (w012, w02);
                 (tLeft, tRight) = (t012, t02);
@@ -377,6 +387,7 @@ namespace akg1my.GraphicalObjects
                 var i = Interpolate(xl, tl, xr, tr);*/
 
                 var zSegment = Interpolate(xLeft[index], zLeft[index], xRight[index], zRight[index]);
+                var zSegmentProj = Interpolate(xLeft[index], zLeftProj[index], xRight[index], zRightProj[index]);
                 var nSegment = Interpolate(xLeft[index], nLeft[index], xRight[index], nRight[index]);
                 var wSegment = Interpolate(xLeft[index], wLeft[index], xRight[index], wRight[index]);
                 var tSegment = Interpolate(xLeft[index], tLeft[index], xRight[index], tRight[index]);
@@ -390,12 +401,23 @@ namespace akg1my.GraphicalObjects
                     {
                         ZBuffer[y * Width + x] = zSegment[x - x0];
 
-                        lightVector = calculateLight?.Invoke(wSegment[x - x0], nSegment[x - x0]) ?? Vector3.One;
+                        if (normalsMap != null)
+                        {
+                            int normXInd = (int)float.Abs(tSegment[x - x0].X / zSegmentProj[x - x0] * (diffuseMap.Width - 1)) % diffuseMap.Width;
+                            int normYInd = (int)float.Abs((1 - tSegment[x - x0].Y / zSegmentProj[x - x0]) * (diffuseMap.Height - 1)) % diffuseMap.Height;
+                            int textureByteNorm = (int)((1 - tSegment[x - x0].Y / zSegmentProj[x - x0]) * normalsMap.Height) * normalsMap.Stride + (int)(tSegment[x - x0].X / zSegmentProj[x - x0] * normalsMap.Width) * normalsMap.ColorSize / 8;
+                            Vector3 normal = new Vector3((normalsMap.MapData[textureByteNorm + 2] / 255.0f) * 2 - 1, (normalsMap.MapData[textureByteNorm + 1] / 255.0f) * 2 - 1, (normalsMap.MapData[textureByteNorm + 0] / 255.0f) * 2 - 1);
+                            lightVector = calculateLight?.Invoke(wSegment[x - x0], normal) ?? Vector3.One;
+                        }
+                        else
+                        {
+                            lightVector = calculateLight?.Invoke(wSegment[x - x0], nSegment[x - x0]) ?? Vector3.One;
+                        }
 
                         byte* pixelPtr = Data + y * Stride + x * 3;
 
-                        int texXInd = (int)(tSegment[x - x0].X / zSegment[x - x0] * (diffuseMap.Width - 1));
-                        int texYInd = (int)(tSegment[x - x0].Y / zSegment[x - x0] * (diffuseMap.Height - 1));
+                        int texXInd = (int)float.Abs(tSegment[x - x0].X / zSegmentProj[x - x0] * (diffuseMap.Width - 1)) % diffuseMap.Width;
+                        int texYInd = (int)float.Abs((1 - tSegment[x - x0].Y / zSegmentProj[x - x0]) * (diffuseMap.Height - 1)) % diffuseMap.Height;
                         int texByteInd = texYInd * diffuseMap.Stride + texXInd * diffuseMap.ColorSize / 8;
                         Vector3 color = new(diffuseMap.MapData[texByteInd], diffuseMap.MapData[texByteInd + 1], diffuseMap.MapData[texByteInd + 2]);
 

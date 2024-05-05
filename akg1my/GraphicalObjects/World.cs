@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace akg1my.GraphicalObjects
 {
@@ -24,7 +25,7 @@ namespace akg1my.GraphicalObjects
             Light.PhongLight light1 = new Light.PhongLight(new(5, 3, 4));
 
             light1.DiffusedIntensity = 1f;
-            light1.BackgroundIntensity = 0.1f;
+            light1.BackgroundIntensity = 0.3f;
             light1.MirrorIntensity = 1.0f;
             _lightsPhong.Add(light1);
 
@@ -35,7 +36,6 @@ namespace akg1my.GraphicalObjects
         public Vector3 CalculateLight(Vector3 point, Vector3 normal)
         {
             Vector3 resultLight = Vector3.Zero;
-            float shine = 100f;
 
             foreach (var light in _lightsLambert)
             {
@@ -43,10 +43,11 @@ namespace akg1my.GraphicalObjects
             }
             foreach (var light in _lightsPhong)
             {
-                resultLight = ClipSum(resultLight, light.CalculateLight(point, normal, _camera.Eye, shine), 1);
+                resultLight = ClipSum(resultLight, light.CalculateLightWithSpecular(point, normal, _camera.Eye), 1);
             }
             return resultLight;
         }
+
         private static Vector3 ClipSum(Vector3 v0, Vector3 v1, float clip)
         {
             Vector3 result = v0 + v1;
@@ -59,6 +60,7 @@ namespace akg1my.GraphicalObjects
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsVisible(Vector3 point, Vector3 normal)
         {
             Vector3 direction = _camera.Eye - point;
@@ -71,52 +73,73 @@ namespace akg1my.GraphicalObjects
             _worldObjects.Add(worldObject);
         }
 
-        public List<Vector4> TransformVertecesToWorld(WorldObject worldObject)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public List<Vector4> TransformModelToWorld(WorldObject worldObject)
         {
-            var verteces = worldObject.Vertices;
+            var vertices = worldObject.Vertices;
 
-            for (var i = 0; i < verteces.Count; i++)
+            for (var i = 0; i < vertices.Count; i++)
             {
-                verteces[i] = Vector4.Transform(verteces[i], GetWorldMatrix(worldObject));
+                vertices[i] = Vector4.Transform(vertices[i], GetWorldMatrix(worldObject));
             }
 
-            return verteces;
+            return vertices;
         }
-        public List<Vector4> TransformVertecesToView(WorldObject worldObject)
-        {
-            var verteces = worldObject.Vertices;
 
-            for (var i = 0; i < verteces.Count; i++)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public List<Vector4> TransformWorldToView(List<Vector4> vertices)
+        {
+            for (var i = 0; i < vertices.Count; i++)
             {
-                verteces[i] = Vector4.Transform(verteces[i], GetWorldMatrix(worldObject));
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ViewMatrix));
+                vertices[i] = Vector4.Transform(vertices[i], Matrix4x4.Transpose(_camera.ViewMatrix));
             }
 
-            return verteces;
+            return vertices;
         }
 
-        public (List<Vector4>, List<bool>) TransformObjectsVerteces(WorldObject worldObject)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public (List<Vector4>, List<bool>) TransformViewToClip(List<Vector4> vertices)
         {
-            var verteces = worldObject.Vertices;
-            var isOut = new List<bool>(new bool[worldObject.Vertices.Count]);
+            var isOut = new List<bool>(new bool[vertices.Count]);
 
-            for (var i = 0; i < verteces.Count; i++)
+            for (var i = 0; i < vertices.Count; i++)
             {
-                verteces[i] = Vector4.Transform(verteces[i], GetWorldMatrix(worldObject));
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ViewMatrix));
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ProjectionMatrix));
-                if (verteces[i].W < 0.05)
+                vertices[i] = Vector4.Transform(vertices[i], Matrix4x4.Transpose(_camera.ProjectionMatrix));
+                if (vertices[i].W < 0.05)
                 {
                     isOut[i] = true;
                     continue;
                 }
-                verteces[i] = Vector4.Divide(verteces[i], verteces[i].W);
-                verteces[i] = Vector4.Transform(verteces[i], Matrix4x4.Transpose(_camera.ViewportMatrix));
             }
 
-            return (verteces, isOut);
+            return (vertices, isOut);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public List<Vector4> TransformClipToProjection(List<Vector4> vertices, List<bool> isOut)
+        {
+            for (var i = 0; i < vertices.Count; i++)
+            {
+                if (!isOut[i])
+                    vertices[i] = Vector4.Divide(vertices[i], vertices[i].W);
+            }
+
+            return vertices;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public List<Vector4> TransformProjectionToViewport(List<Vector4> vertices, List<bool> isOut)
+        {
+            for (var i = 0; i < vertices.Count; i++)
+            {
+                if (!isOut[i])
+                    vertices[i] = Vector4.Transform(vertices[i], Matrix4x4.Transpose(_camera.ViewportMatrix));
+            }
+
+            return vertices;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Matrix4x4 GetWorldMatrix(WorldObject worldObject)
         {
             Matrix4x4 fromObjToWorldMatrix =
